@@ -1,8 +1,3 @@
-//IM-2021-049
-//KAVISHA SHEHANI LIYANAPATHIRANA
-
-
-
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Dimensions, SafeAreaView } from 'react-native';
 
@@ -13,11 +8,20 @@ export default function App() {
     const [operator, setOperator] = useState(null);   //Stores the current operator (+, -).
     const [waitingForSecondOperand, setWaitingForSecondOperand] = useState(false);   //if the app is waiting for the second operand after an operator is pressed.
 
-    function handleInput(input) {         // Processes user input for numbers and decimal points.
-        if (input === '.' && isDecimal) return;
+    function handleInput(input) {
+        if (isResult) { // Reset calculation when new input is pressed after result
+            setDisplayValue(input.toString());
+            setIsResult(false);
+            setFirstOperand(null);
+            setOperator(null);
+            setWaitingForSecondOperand(false);
+            setIsDecimal(false);
+            return;
+        }
+         if (input === '.' && isDecimal) return;
         if (input === '.') setIsDecimal(true);
 
-        if (displayValue === '0' || waitingForSecondOperand) {         
+        if (displayValue === '0' || waitingForSecondOperand) {
             setDisplayValue(input.toString());
             setWaitingForSecondOperand(false);
         } else {
@@ -46,7 +50,29 @@ export default function App() {
         setIsDecimal(false);
     };
 
-    const performCalculation = (operator, firstOperand, secondOperand) => {       //Executes the operation based on the operator.
+    const handleOperator = (nextOperator) => {    
+        const inputValue = parseFloat(displayValue);
+
+        if (operator && waitingForSecondOperand) {
+            setOperator(nextOperator);
+            return;
+        }
+
+        if (firstOperand == null) {
+            setFirstOperand(inputValue);
+        } else if (operator) {
+            const result = performCalculation(operator, firstOperand, inputValue);
+            setDisplayValue(result.toString());
+            setFirstOperand(result);
+            setIsResult(true); // Mark the result as shown
+        }
+
+        setOperator(nextOperator);
+        setWaitingForSecondOperand(true);
+        setIsDecimal(false);
+    };
+
+    const performCalculation = (operator, firstOperand, secondOperand) => {
         switch (operator) {
             case '+':
                 return firstOperand + secondOperand;
@@ -57,7 +83,7 @@ export default function App() {
             case '÷':
                 return secondOperand === 0 ? 'Error' : firstOperand / secondOperand;
             case '%':
-                return firstOperand *0.01 ;
+                return firstOperand * 0.01;
             case '√':
                 return firstOperand >= 0 ? Math.sqrt(firstOperand) : 'Error';
             default:
@@ -65,27 +91,29 @@ export default function App() {
         }
     };
 
-    const handleEqual = () => {       //Computes the result when the equals button is pressed
+    const handleEqual = () => {
         if (!operator || firstOperand == null) return;
 
-        const secondOperand = parseFloat(displayValue);     
+        const secondOperand = parseFloat(displayValue);
         const result = performCalculation(operator, firstOperand, secondOperand);
 
         setDisplayValue(result.toString());
         setFirstOperand(null);
         setOperator(null);
         setWaitingForSecondOperand(false);
+        setIsResult(true); // Mark the result as shown
     };
 
-    const handleClear = () => {     //Resets all states, clearing the display and stored values.
+    const handleClear = () => {     
         setDisplayValue('0');
         setFirstOperand(null);
         setOperator(null);
         setWaitingForSecondOperand(false);
         setIsDecimal(false);
+        setIsResult(false); // Reset the result state
     };
 
-    const handleDelete = () => {      //Deletes the last character of the displayed value.
+    const handleDelete = () => {      
         if (displayValue.length === 1 || displayValue === 'Error') {
             setDisplayValue('0');
             setIsDecimal(false);
@@ -93,10 +121,8 @@ export default function App() {
             setDisplayValue(displayValue.slice(0, -1));
         }
     };
-
     return (
-         //safeAreaView-a container for the app's UI, ensuring the content is displayed within the safe area on different devices.
-        <SafeAreaView style={styles.container}>   
+        <SafeAreaView style={styles.container}>
             <View style={styles.displayContainer}>
                 {/* Secondary display to show calculation progress */}
                 <Text style={styles.secondaryDisplayText}>
@@ -245,7 +271,7 @@ const styles = StyleSheet.create({
         margin: screenWidth * 0.01,
     },
     clearButtonText: {
-        fontSize: screenWidth * 0.06,
+        fontSize: screenWidth * 0.08,
         color: '#fff',
     },
     deleteButton: {
@@ -257,7 +283,7 @@ const styles = StyleSheet.create({
         margin: screenWidth * 0.01,
     },
     deleteButtonText: {
-        fontSize: screenWidth * 0.06,
+        fontSize: screenWidth * 0.08,
         color: '#fff',
     },
-}); 
+});
