@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Dimensions, SafeAreaView } from 'react-native';
 
 export default function App() {
-    const [displayValue, setDisplayValue] = useState('0');  //Holds the value currently displayed on the screen.
-    const [isDecimal, setIsDecimal] = useState(false);   //Tracks whether a decimal point has been used.
-    const [firstOperand, setFirstOperand] = useState(null);  //Stores the first operand for an operation.
-    const [operator, setOperator] = useState(null);   //Stores the current operator (+, -).
-    const [waitingForSecondOperand, setWaitingForSecondOperand] = useState(false);   //if the app is waiting for the second operand after an operator is pressed.
+    const [displayValue, setDisplayValue] = useState('0');
+    const [isDecimal, setIsDecimal] = useState(false);
+    const [firstOperand, setFirstOperand] = useState(null);
+    const [operator, setOperator] = useState(null);
+    const [waitingForSecondOperand, setWaitingForSecondOperand] = useState(false);
+    const [isResult, setIsResult] = useState(false); // Added state to track if result is shown
 
     function handleInput(input) {
         if (isResult) { // Reset calculation when new input is pressed after result
@@ -18,7 +19,8 @@ export default function App() {
             setIsDecimal(false);
             return;
         }
-         if (input === '.' && isDecimal) return;
+
+        if (input === '.' && isDecimal) return;
         if (input === '.') setIsDecimal(true);
 
         if (displayValue === '0' || waitingForSecondOperand) {
@@ -28,27 +30,6 @@ export default function App() {
             setDisplayValue(displayValue + input);
         }
     }
-
-    const handleOperator = (nextOperator) => {    //Manages the flow of operations when an operator button is pressed.
-        const inputValue = parseFloat(displayValue);
-
-        if (operator && waitingForSecondOperand) {
-            setOperator(nextOperator);
-            return;
-        }
-
-        if (firstOperand == null) {
-            setFirstOperand(inputValue);
-        } else if (operator) {
-            const result = performCalculation(operator, firstOperand, inputValue);
-            setDisplayValue(result.toString());
-            setFirstOperand(result);
-        }
-
-        setOperator(nextOperator);
-        setWaitingForSecondOperand(true);
-        setIsDecimal(false);
-    };
 
     const handleOperator = (nextOperator) => {    
         const inputValue = parseFloat(displayValue);
@@ -121,6 +102,7 @@ export default function App() {
             setDisplayValue(displayValue.slice(0, -1));
         }
     };
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.displayContainer}>
